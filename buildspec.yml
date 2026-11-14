@@ -1,0 +1,44 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_ENV: "test"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Node $(node -v) / npm $(npm -v)"
+  pre_build:
+    commands:
+      - echo "Instalando dependencias (con caché de CodeBuild)..."
+      - npm ci
+  build:
+    commands:
+      - echo "Ejecutando pruebas unitarias..."
+      - npm test
+  post_build:
+    commands:
+      - echo "Pruebas superadas. Generando artefacto de despliegue para Elastic Beanstalk..."
+      - echo "Build $CODEBUILD_BUILD_NUMBER - commit $CODEBUILD_RESOLVED_SOURCE_VERSION"
+
+reports:
+  jest_reports:
+    files:
+      - "junit.xml"
+    base-directory: "reports"
+    file-format: JUNITXML
+
+artifacts:
+  files:
+    - package.json
+    - package-lock.json
+    - Procfile
+    - src/**/*
+    - .platform/**/*
+
+cache:
+  paths:
+    - "node_modules/**/*"
+    - "/root/.npm/**/*"
